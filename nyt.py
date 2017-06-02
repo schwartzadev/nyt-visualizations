@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import numpy as np
 import pylab as pl
+from collections import Counter
 
 '''
  * get a key at developer.nytimes.com
@@ -13,7 +14,7 @@ import pylab as pl
 
 def getNewest(num): # returns the most recent articles from the NYT api
 	n = 1
-	for i in range(0,int(num)):
+	for i in range(0,int(num)): # num is the # of pages (groups of 10 articles)
 		r = requests.get('http://api.nytimes.com/svc/search/v2/articlesearch.json?' + 
 			'fl=source,snippet,headline,web_url,pub_date&' +
 			'page=' + str(i) + '&' +
@@ -72,5 +73,42 @@ def graphFrequency(query, startYr, endYr):
 	pl.savefig(name, bbox_inches='tight')
 	pl.show()
 
+def graphWords(term): # bar graph of word frequency in a given query
+	wordList = ''
+	x = []
+	y = []
+	data = {'api-key': apiKey,
+	'fq' : 'headline:(\"' + term + '\")',
+	'fl' : 'headline,snippet,pub_date,lead_paragraph'}
+	r = requests.get('http://api.nytimes.com/svc/search/v2/articlesearch.json', params=data)
+	d = r.json()
+	try:
+		print(d['message']) # if api limit exceeded
+	except KeyError as e:
+		for doc in d['response']['docs']:
+			wordList += ' '
+			wordList += doc['headline']['main']
+			wordList += ' '
+			wordList += doc['lead_paragraph']
+	blacklist = ['the', 'says', 'said', 'with', 'that', 'and', 'for', 'his', 'her']
+	wordList = wordList.lower().replace(':', '').replace(',', '')
+	wordList = Counter(wordList.split()).most_common()
+	for item in wordList:
+		if (item[0] in blacklist) or len(item[0]) < 3 or item[1] < 3:
+			pass
+		else:
+			print(item)
+			x.append(item[0].title())
+			y.append(item[1])
+
+	y_pos = np.arange(len(x))
+	pl.bar(y_pos, y, align='center', alpha=0.5)
+	pl.xticks(y_pos, x, rotation = 315)
+	pl.ylabel('Frequency')
+	pl.title('NYT Word Frequency in query "' + term + '"')
+	pl.show()
+
+
 apiKey = setApiKey() # gets key from file **cannot perform requests without this**
-graphFrequency('republican', 1920, 1928)
+# graphFrequency('republican', 1920, 1928)
+graphWords('merkel')
