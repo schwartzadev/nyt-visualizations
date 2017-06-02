@@ -7,11 +7,11 @@ import numpy as np
 import pylab as pl
 
 '''
-make a file named api.txt, place it in this same directory, and put your api key in the file, on the first line.
-get a key at developer.nytimes.com
+ * get a key at developer.nytimes.com
+ * make a file named api.txt, place it in this same directory, and put your api key in the file, on the first line.
 '''
 
-def getNewest(num):
+def getNewest(num): # returns the most recent articles from the NYT api
 	n = 1
 	for i in range(0,int(num)):
 		r = requests.get('http://api.nytimes.com/svc/search/v2/articlesearch.json?' + 
@@ -27,7 +27,7 @@ def getNewest(num):
 				n += 1
 		time.sleep(.9)
 
-def setApiKey():
+def setApiKey(): # sets the api key, from api.txt
 	with open('api.txt', 'r') as myfile:
 		data = myfile.read()
 		return data
@@ -45,6 +45,9 @@ def getFrequency(term, yr):
 		print(d['message'])
 		return None
 	except Exception as e:
+		'''for doc in d['response']['docs']:
+			print(doc['headline']['main'])
+		# this prints each of the articles in the given year'''
 		print(str(yr) + ': ' + str(d['response']['meta']['hits']) + ' hits')
 		return d['response']['meta']['hits']
 
@@ -55,13 +58,12 @@ def graphFrequency(query, startYr, endYr):
 		y.append(getFrequency(query, i))
 		x.append(i)
 		time.sleep(.8) # prevents API limit, adjust as needed
-
 	pl.xlabel('Year')
 	pl.ylabel('Frequency of Query')
 	prstr = 'NYT Headlines\' frequency of "%s"' % query
 	pl.title(prstr)
 	pl.grid(True)
-	pl.plot(x, y, 'c*')
+	pl.plot(x, y, 'b*')
 	coefs = np.polyfit(x, y, 6) # number of curves, will frequently return RankWanring
 	y_poly = np.polyval(coefs, x)
 	pl.plot(x, y_poly)
@@ -70,5 +72,5 @@ def graphFrequency(query, startYr, endYr):
 	pl.savefig(name, bbox_inches='tight')
 	pl.show()
 
-apiKey = setApiKey() # gets ket from file **cannot perform requests without this**
-graphFrequency('climate change', 1980, 2016)
+apiKey = setApiKey() # gets key from file **cannot perform requests without this**
+graphFrequency('republican', 1920, 1928)
