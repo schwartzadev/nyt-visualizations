@@ -7,3 +7,4 @@ api.txt
 
 *.gif
 *.svg
+__pycache__
